@@ -1,0 +1,47 @@
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div class="flex-1">
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Dashboard de Operações</h1>
+        <p class="text-slate-400 text-sm font-medium">Gerencie e monitore seus ativos em tempo real</p>
+    </div>
+
+    <div class="flex items-center gap-4 w-full md:w-auto">
+        <div class="relative w-full md:w-80">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                🔍
+            </span>
+            <input type="text" 
+                   @bind="SearchTerm" 
+                   @bind:event="oninput"
+                   @onkeyup="HandleSearchInternal"
+                   class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all sm:text-sm" 
+                   placeholder="Buscar por nome ou série...">
+        </div>
+        
+        
+        <button @onclick="HandleToggleFormInternal" 
+                class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 whitespace-nowrap">
+            + Novo Ativo
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public EventCallback OnToggleForm { get; set; }
+    
+    private string SearchTerm { get; set; } = "";
+
+    
+    private async Task HandleSearchInternal() 
+    {
+        await OnSearch.InvokeAsync(SearchTerm);
+    }
+
+    private async Task HandleToggleFormInternal() 
+    {
+        if (OnToggleForm.HasDelegate)
+        {
+            await OnToggleForm.InvokeAsync();
+        }
+    }
+}

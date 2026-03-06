@@ -1,0 +1,97 @@
+@using NexusAssets.Domain.Entities
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50/50 border-b border-slate-100">
+                <tr>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Informações do Ativo</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Categoria</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Localização</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Valor</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @if (AssetList != null && AssetList.Any())
+                {
+                    @foreach (var asset in AssetList)
+                    {
+                        <tr class="group hover:bg-slate-50/80 transition-all">
+                            
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">@asset.Name</span>
+                                    <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tight">SN: @(asset.SerialNumber ?? "N/A")</span>
+                                </div>
+                            </td>
+
+                            
+                            <td class="px-6 py-4 text-center">
+                                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
+                                    @(asset.Category?.Name ?? "Sem Categoria")
+                                </span>
+                            </td>
+
+                            
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex flex-col items-center">
+                                    <span class="text-sm text-slate-600 italic">
+                                        @(asset.Location?.Name ?? "Não Definido")
+                                    </span>
+                                </div>
+                            </td>
+
+                            
+                            <td class="px-6 py-4 text-center">
+                                @{
+                                    var statusClasses = asset.Status switch
+                                    {
+                                        "Disponível" => "bg-emerald-50 text-emerald-700 border-emerald-100",
+                                        "Em Uso" => "bg-indigo-50 text-indigo-700 border-indigo-100",
+                                        "Manutenção" => "bg-amber-50 text-amber-700 border-amber-100",
+                                        _ => "bg-slate-50 text-slate-600 border-slate-100"
+                                    };
+                                }
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border @statusClasses">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-current opacity-60 mr-1.5"></span>
+                                    @asset.Status
+                                </span>
+                            </td>
+
+                            
+                            <td class="px-6 py-4 text-right">
+                                <span class="font-black text-slate-900 tracking-tight">@asset.Value.ToString("C")</span>
+                            </td>
+
+                            
+                            <td class="px-6 py-4 text-center">
+                                <button @onclick="() => OnDelete.InvokeAsync(asset.Id)" 
+                                        class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                        title="Excluir Ativo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-slate-400 italic">
+                            Nenhum ativo encontrado...
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Asset>? AssetList { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+}

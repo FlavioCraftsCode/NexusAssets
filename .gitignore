@@ -1,0 +1,36 @@
+## [ PADRÃO .NET ]
+# Pastas de saída (compilação)
+bin/
+obj/
+publish/
+
+# Banco de dados local (SQLite)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Segredos e configurações sensíveis
+# (Não subimos o appsettings para não vazar strings de conexão)
+appsettings.json
+appsettings.Development.json
+UserSecrets/
+.env
+
+## [ EDITORES ]
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+.history/
+
+## [ SISTEMA ]
+# Logs
+*.log
+# Arquivos do sistema (Mac/Windows)
+.DS_Store
+Thumbs.db

@@ -1,0 +1,36 @@
+@using MudBlazor
+@using NexusAssets.Domain.Entities
+@using NexusAssets.Application.Common.Interfaces
+@using NexusAssets.Server.UI.Components.Pages.Shared
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="mr-3 mb-n1" />
+            @(Asset.Id == 0 ? "Novo Ativo" : "Editar Ativo")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        
+        <AssetForm NovoAsset="Asset" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Salvar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] 
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] 
+    public Asset Asset { get; set; } = new();
+
+    
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(Asset));
+
+    private void Cancel() => MudDialog.Cancel();
+}

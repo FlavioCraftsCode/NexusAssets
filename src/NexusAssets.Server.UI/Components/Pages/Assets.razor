@@ -1,0 +1,218 @@
+@page "/assets"
+@using NexusAssets.Domain.Entities
+@using NexusAssets.Application.Common.Interfaces
+@using NexusAssets.Server.UI.Components.Pages.Shared
+@using MudBlazor
+@using System.IO
+@inject IAssetService AssetService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-12">
+    
+    <div class="d-flex align-center justify-between mb-8">
+        <div>
+            <MudText Typo="Typo.h4" Style="font-weight: 800; color: #1e293b;">Inventário de Ativos</MudText>
+            <MudText Typo="Typo.body2" Class="text-slate-500">Gestão centralizada de patrimônio e dispositivos</MudText>
+        </div>
+        <div class="d-flex gap-3">
+             <MudButton Variant="Variant.Outlined" 
+                        StartIcon="@Icons.Material.Filled.Download" 
+                        Color="Color.Default" 
+                        OnClick="ExportExcel"
+                        Style="border-radius: 12px; text-transform: none; font-weight: 600;">
+                Exportar Dados
+            </MudButton>
+            <MudButton Variant="Variant.Filled" 
+                       StartIcon="@Icons.Material.Filled.Add" 
+                       Color="Color.Primary" 
+                       OnClick="OpenCreateDialog"
+                       Style="border-radius: 12px; text-transform: none; font-weight: 700; background-color: #4f46e5;">
+                Novo Ativo
+            </MudButton>
+        </div>
+    </div>
+
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <MudText Typo="Typo.caption" Class="text-slate-400 uppercase font-bold">Total de Itens</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 800;">@(assets?.Count ?? 0)</MudText>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <MudText Typo="Typo.caption" Class="text-slate-400 uppercase font-bold">Valor Patrimonial</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 800; color: #10b981;">@((assets?.Sum(a => a.Value) ?? 0).ToString("C"))</MudText>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <MudText Typo="Typo.caption" Class="text-slate-400 uppercase font-bold">Média por Item</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 800;">@((assets?.Any() == true ? assets.Average(a => a.Value) : 0).ToString("C"))</MudText>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-indigo-500">
+            <MudText Typo="Typo.caption" Class="text-slate-400 uppercase font-bold">Taxa de Uso</MudText>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h5" Style="font-weight: 800;">82%</MudText>
+                <MudProgressLinear Color="Color.Info" Value="82" Class="rounded-lg" Style="height: 8px; width: 60px;" />
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="bg-white p-2 rounded-xl border border-slate-100 mb-4 d-flex align-center shadow-sm">
+        <MudTextField T="string" ValueChanged="@(s => HandleSearch(s))" Placeholder="Buscar por nome ou serial..." 
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                      Variant="Variant.Text" Underline="false" Class="mt-0 px-4" Clearable="true" />
+    </div>
+
+    
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <MudTable Items="@filteredAssets" 
+                  Hover="true" 
+                  Elevation="0" 
+                  Dense="true"
+                  Striped="true"
+                  Filter="new Func<Asset,bool>(FilterFunc1)">
+            <HeaderContent>
+                
+                <MudTh Style="background-color: #f8fafc; font-weight: 700; color: #64748b;">DESCRIÇÃO</MudTh>
+                <MudTh Style="background-color: #f8fafc; font-weight: 700; color: #64748b;">CATEGORIA</MudTh>
+                <MudTh Style="background-color: #f8fafc; font-weight: 700; color: #64748b;">LOCALIZAÇÃO</MudTh>
+                <MudTh Style="background-color: #f8fafc; font-weight: 700; color: #64748b;">STATUS</MudTh>
+                <MudTh Style="background-color: #f8fafc; font-weight: 700; color: #64748b;">VALOR</MudTh>
+                <MudTh Style="background-color: #f8fafc; font-weight: 700; color: #64748b; text-align: right; width: 120px;">AÇÕES</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                
+                <MudTd>
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.body2" Style="font-weight: 600; color: #334155;">@context.Name</MudText>
+                        <MudText Typo="Typo.caption" Class="text-slate-400">@context.SerialNumber</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Categoria">
+                    <MudText Typo="Typo.body2">@(context.Category?.Name ?? "---")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Localização">
+                    <MudText Typo="Typo.body2" Class="text-slate-500">@(context.Location?.Name ?? "---")</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Text" Style="font-weight: bold;">
+                        @context.Status?.ToUpper()
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="font-weight: 700;">@context.Value.ToString("C")</MudTd>
+                <MudTd Style="text-align: right; white-space: nowrap;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => HandleDelete(context))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager RowsPerPageString="Linhas:" />
+            </PagerContent>
+        </MudTable>
+    </div>
+</MudContainer>
+
+@code {
+    private List<Asset>? assets;
+    private List<Asset>? filteredAssets;
+    private string searchString = "";
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load() {
+        assets = await AssetService.GetActiveAssetsAsync();
+        filteredAssets = assets;
+    }
+
+    private void HandleSearch(string term) {
+        searchString = term;
+        if (string.IsNullOrWhiteSpace(term))
+            filteredAssets = assets;
+        else
+            filteredAssets = assets?.Where(a => 
+                (a.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) || 
+                (a.SerialNumber?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.AssetTag?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+    }
+
+    private bool FilterFunc1(Asset asset) => FilterFunc(asset, searchString);
+
+    private bool FilterFunc(Asset asset, string search) {
+        if (string.IsNullOrWhiteSpace(search)) return true;
+        if (asset.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) == true) return true;
+        if (asset.AssetTag?.Contains(search, StringComparison.OrdinalIgnoreCase) == true) return true;
+        return false;
+    }
+
+    private Color GetStatusColor(string? status) => status switch
+    {
+        "Disponível" => Color.Success,
+        "Em Uso" => Color.Info,
+        "Manutenção" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private async Task OpenCreateDialog() {
+        var parameters = new DialogParameters<AssetDialog> { 
+            { x => x.Asset, new Asset { AcquisitionDate = DateTime.Now, Status = "Disponível" } } 
+        };
+        await ShowDialog(parameters, "Novo Ativo");
+    }
+
+    private async Task OpenEditDialog(Asset asset) {
+        var parameters = new DialogParameters<AssetDialog> { { x => x.Asset, asset } };
+        await ShowDialog(parameters, "Editar Ativo");
+    }
+
+    private async Task ShowDialog(DialogParameters<AssetDialog> parameters, string title) {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true, Position = DialogPosition.Center };
+        var dialog = await DialogService.ShowAsync<AssetDialog>(title, parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled) {
+            var asset = (Asset)result.Data!;
+            if (asset.Id == 0)
+                await AssetService.CreateAssetAsync(asset);
+            else
+                await AssetService.UpdateAssetAsync(asset);
+            
+            Snackbar.Add("Registro atualizado!", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task HandleDelete(Asset asset) {
+        var parameters = new DialogParameters<MudMessageBox> {
+            { x => x.Title, "Atenção" },
+            { x => x.Message, $"Excluir o ativo {asset.Name}?" },
+            { x => x.YesText, "Excluir" },
+            { x => x.CancelText, "Cancelar" }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<MudMessageBox>("Confirmar", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled) {
+            await AssetService.DeleteAssetAsync(asset.Id);
+            Snackbar.Add("Ativo removido", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task ExportExcel() {
+        try {
+            var fileBytes = await AssetService.ExportToExcelAsync();
+            var fileName = $"Inventario_{DateTime.Now:ddMMyy}.xlsx";
+            using var stream = new MemoryStream(fileBytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFile", fileName, streamRef);
+            Snackbar.Add("Excel pronto!", Severity.Success);
+        } catch (Exception ex) {
+            Snackbar.Add($"Erro: {ex.Message}", Severity.Error);
+        }
+    }
+}

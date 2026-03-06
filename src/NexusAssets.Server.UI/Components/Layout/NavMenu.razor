@@ -1,0 +1,44 @@
+﻿<div class="top-row ps-3 navbar navbar-dark bg-indigo-900">
+    <div class="container-fluid">
+        <a class="navbar-brand font-black tracking-tighter" href="">
+            <span class="bg-white text-indigo-600 px-2 py-1 rounded-lg mr-2">NA</span> NexusAssets
+        </a>
+    </div>
+</div>
+
+<MudNavMenu>
+    <div class="pt-4">
+        
+        <MudNavLink href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard" Class="mx-2 rounded-xl transition-all">
+            Dashboard
+        </MudNavLink>
+
+        
+        <MudNavLink href="/assets" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inventory2" Class="mx-2 rounded-xl transition-all">
+            Ativos
+        </MudNavLink>
+
+        
+        <MudNavLink href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.BarChart" Class="mx-2 rounded-xl transition-all">
+            Relatórios
+        </MudNavLink>
+    </div>
+</MudNavMenu>
+
+<style>
+    
+    .mud-nav-link {
+        color: #94a3b8 !important;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    .mud-nav-link.active {
+        background-color: rgba(79, 70, 229, 0.1) !important;
+        color: #4f46e5 !important;
+    }
+    
+    .mud-nav-link-icon {
+        color: inherit !important;
+    }
+</style>

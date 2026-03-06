@@ -1,0 +1,25 @@
+@using NexusAssets.Domain
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:scale-[1.02]">
+        <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider text-indigo-600">Total de Itens</p>
+        <p class="text-3xl font-black text-slate-900">@(AssetList?.Count ?? 0)</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:scale-[1.02]">
+        <p class="text-sm font-semibold text-slate-500 uppercase text-emerald-600 tracking-wider">Valor Total</p>
+        <p class="text-3xl font-black text-emerald-600">@(AssetList?.Sum(a => a.Value).ToString("C") ?? "R$ 0,00")</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:scale-[1.02]">
+        <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider text-amber-600">Média por Item</p>
+        <p class="text-3xl font-black text-slate-900">@GetMedia().ToString("C")</p>
+    </div>
+</div>
+
+@code {
+    
+    [Parameter] public List<Asset>? AssetList { get; set; }
+
+    private decimal GetMedia() => AssetList?.Any() == true ? AssetList.Average(a => a.Value) : 0;
+}

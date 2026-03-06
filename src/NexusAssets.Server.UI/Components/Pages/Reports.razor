@@ -1,0 +1,182 @@
+@page "/reports"
+@using NexusAssets.Domain.Entities
+@using NexusAssets.Application.Common.Interfaces
+@inject IAssetService AssetService
+@rendermode InteractiveServer
+
+<div class="dashboard-wrapper">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8 pb-12">
+        <div class="d-flex justify-between align-center mb-10">
+            <div>
+                <MudText Typo="Typo.h4" Class="fw-black text-white mb-1">Nexus Intelligence</MudText>
+                <MudText Typo="Typo.body1" Style="color: #94a3b8">Monitoramento de performance patrimonial.</MudText>
+            </div>
+            <MudChip T="string" Variant="Variant.Filled" Style="background: #10b981; color: #064e3b;" Icon="@Icons.Material.Filled.AutoGraph" Class="fw-bold">DATA 2026</MudChip>
+        </div>
+
+        @if (_isDataLoaded)
+        {
+            <MudGrid Class="mb-8">
+                <MudItem xs="12" sm="6" md="3">
+                    <div class="kpi-card">
+                        <MudText Typo="Typo.subtitle2" Class="kpi-label">PATRIMÔNIO TOTAL</MudText>
+                        <div class="d-flex align-center">
+                            <MudText Typo="Typo.h4" Class="kpi-value text-money">@_totalValue.ToString("C0")</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Class="text-money ml-2" />
+                        </div>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div class="kpi-card">
+                        <MudText Typo="Typo.subtitle2" Class="kpi-label">VOLUME DE ATIVOS</MudText>
+                        <MudText Typo="Typo.h4" Class="kpi-value text-money">@_totalAssets</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div class="kpi-card">
+                        <MudText Typo="Typo.subtitle2" Class="kpi-label">TICKET MÉDIO</MudText>
+                        <MudText Typo="Typo.h4" Class="kpi-value text-money">@_averageValue.ToString("C0")</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div class="kpi-card border-money">
+                        <MudText Typo="Typo.subtitle2" Class="kpi-label">STATUS REDE</MudText>
+                        <MudText Typo="Typo.h4" Class="kpi-value text-money">ONLINE</MudText>
+                    </div>
+                </MudItem>
+            </MudGrid>
+
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudPaper Elevation="0" Class="main-chart-paper">
+                        <MudText Typo="Typo.h6" Class="fw-bold text-white mb-6">Curva de Crescimento</MudText>
+                        <MudChart T="double" ChartType="ChartType.Line" ChartSeries="@_lineSeries" 
+                                  XAxisLabels="@_monthLabels" Width="100%" Height="300px" />
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudPaper Elevation="0" Class="side-panel">
+                        <MudText Typo="Typo.h6" Class="fw-bold text-white mb-6">Investimento / Cat</MudText>
+                        @foreach (var cat in _categoryList)
+                        {
+                            <div class="mb-5">
+                                <div class="d-flex justify-between mb-2">
+                                    <MudText Typo="Typo.body2" Class="text-white fw-bold">@cat.Name</MudText>
+                                    <MudText Typo="Typo.body2" Class="text-money fw-black">@cat.Percentage.ToString("F1")%</MudText>
+                                </div>
+                                <div class="progress-container">
+                                    <MudProgressLinear Color="Color.Success" Value="@cat.Percentage" Class="rounded-pill" Size="Size.Medium" />
+                                </div>
+                                <MudText Typo="Typo.caption" Style="color: #64748b;">@cat.TotalValue.ToString("C2")</MudText>
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Elevation="0" Class="side-panel mt-4">
+                        <MudText Typo="Typo.h6" Class="fw-bold text-white mb-4">Últimas Entradas</MudText>
+                        <MudTable Items="@_recentAssets" Hover="true" Elevation="0" Class="bg-transparent custom-table">
+                            <HeaderContent>
+                                <MudTh Style="color: #94a3b8; font-weight: 700;">Ativo</MudTh>
+                                <MudTh Style="color: #94a3b8; font-weight: 700;">Data</MudTh>
+                                <MudTh Style="color: #94a3b8; font-weight: 700; text-align: right;">Valor</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd Style="color: #f8fafc; font-weight: 500;">@context.Name</MudTd>
+                                <MudTd Style="color: #cbd5e1">@context.AcquisitionDate.ToShortDateString()</MudTd>
+                                <MudTd Style="text-align: right;" Class="text-money fw-black">@context.Value.ToString("C2")</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <div class="d-flex justify-center align-center" style="height: 400px;">
+                <MudProgressCircular Color="Color.Success" Indeterminate="true" />
+            </div>
+        }
+    </MudContainer>
+</div>
+
+<style>
+    .dashboard-wrapper { background: #0b0f1a; min-height: 100vh; margin: -24px; padding: 24px; font-family: 'Inter', sans-serif; }
+    .fw-black { font-weight: 900 !important; }
+    .fw-bold { font-weight: 700 !important; }
+    .text-money { color: #10b981 !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    .kpi-card { padding: 1.5rem; border-radius: 1.25rem; background: #161b2c; border: 1px solid #2d3748; transition: all 0.2s; }
+    .kpi-card:hover { transform: translateY(-5px); border-color: #10b981; }
+    .border-money { border-left: 4px solid #10b981; }
+    .kpi-label { color: #94a3b8; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.1em; }
+    .kpi-value { font-weight: 900; margin-top: 0.5rem; }
+    .main-chart-paper, .side-panel { background: #161b2c !important; border: 1px solid #2d3748 !important; border-radius: 1.5rem !important; padding: 1.8rem; }
+    .progress-container { background-color: #334155; border-radius: 20px; overflow: hidden; margin-bottom: 4px; }
+    .custom-table td { border-bottom: 1px solid #2d3748 !important; padding: 16px 12px !important; }
+    .mud-charts-color-1 { fill: #10b981 !important; stroke: #10b981 !important; }
+</style>
+
+@code {
+    private bool _isDataLoaded = false;
+    private int selectedYear = 2026;
+    private decimal _totalValue = 0;
+    private int _totalAssets = 0;
+    private decimal _averageValue = 0;
+    private List<ChartSeries<double>> _lineSeries = new();
+    private string[] _monthLabels = { "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez" };
+    private List<CategorySummary> _categoryList = new();
+    private List<Asset> _recentAssets = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        _isDataLoaded = true;
+    }
+
+    private async Task LoadData()
+    {
+        try 
+        {
+            var result = await AssetService.GetActiveAssetsAsync();
+            var assets = result?.ToList() ?? new List<Asset>();
+
+            if (assets.Any())
+            {
+                _totalValue = assets.Sum(a => a.Value);
+                _totalAssets = assets.Count;
+                _averageValue = _totalAssets > 0 ? _totalValue / _totalAssets : 0;
+                _recentAssets = assets.OrderByDescending(a => a.AcquisitionDate).Take(5).ToList();
+
+                var monthlyData = new double[12];
+                foreach (var a in assets.Where(x => x.AcquisitionDate.Year == selectedYear))
+                {
+                    int m = a.AcquisitionDate.Month - 1;
+                    if (m >= 0 && m < 12) monthlyData[m] += (double)a.Value;
+                }
+                
+                _lineSeries.Clear();
+                _lineSeries.Add(new ChartSeries<double> { Name = "Evolução", Data = monthlyData });
+
+                _categoryList = assets
+                    .GroupBy(a => a.Category?.Name ?? "Outros")
+                    .Select(g => new CategorySummary { 
+                        Name = g.Key, 
+                        TotalValue = g.Sum(x => x.Value),
+                        Percentage = _totalValue > 0 ? (double)(g.Sum(x => x.Value) / _totalValue * 100) : 0
+                    })
+                    .OrderByDescending(c => c.TotalValue)
+                    .Take(5)
+                    .ToList();
+            }
+        }
+        catch (Exception ex) { Console.WriteLine($"Erro ao carregar dados: {ex.Message}"); }
+    }
+
+    public class CategorySummary {
+        public string Name { get; set; } = "";
+        public decimal TotalValue { get; set; }
+        public double Percentage { get; set; }
+    }
+}
